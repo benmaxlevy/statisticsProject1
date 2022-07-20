@@ -1,7 +1,4 @@
 ---
-title: "project1"
-author: "Ben Levy, Eric Zhao, Will Gokey, Taha Shakeel"
-date: "2022-07-20"
-output: html_document
+title: "R Notebook"
+output: html_notebook
 ---
-
