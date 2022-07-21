@@ -31,6 +31,42 @@ salaries %>%
             min_pay_usd = min(salary_in_usd))
 ```
 
+
+# Experience Vs Pay
+
+```{r}
+
+salaries %>%
+  select("experience_level", "salary_in_usd") %>%
+    group_by(experience_level) %>%
+      summarize(
+            mean_pay_usd = mean(salary_in_usd),
+            median_pay_usd = median(salary_in_usd),
+            sd_pay_usd = sd(salary_in_usd),
+            max_pay_usd = max(salary_in_usd),
+            min_pay_usd = min(salary_in_usd)
+            ) %>%
+            
+            arrange(desc(mean_pay_usd)) %>%
+  ggplot(aes(x = fct_reorder(experience_level, mean_pay_usd), y = mean_pay_usd)) +
+geom_col() +
+      labs(x =  "experience level", y = "Salary (USD)", title = "Comparing Experience Level to Pay", subtitle =           "In Data Science-Related Occupations") +
+              theme_light() +
+                theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
+                  scale_y_continuous(labels = scales::dollar)
+
+
+salaries %>%
+  select("experience_level", "salary_in_usd") %>%
+    group_by(experience_level) %>%
+      summarize(
+            mean_pay_usd = mean(salary_in_usd),
+            median_pay_usd = median(salary_in_usd),
+            sd_pay_usd = sd(salary_in_usd),
+            max_pay_usd = max(salary_in_usd),
+            min_pay_usd = min(salary_in_usd)
+            )
+            
 # Country versus Salary
 
 - Only count countries that have >= `n` employees in dataset 
