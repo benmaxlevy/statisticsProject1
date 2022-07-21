@@ -2,3 +2,26 @@
 title: "R Notebook"
 output: html_notebook
 ---
+```{r, message = FALSE}
+salaries <- read_csv("dataset/ds_salaries.csv")
+```
+
+# Company Size versus Salary
+
+```{r}
+options(scipen = 999)
+salaries %>%
+  ggplot(aes(x = company_size, y = salary_in_usd)) +
+  geom_boxplot() +
+  labs(x = "Company Size", y = "Salary (USD)", title = "Comparing Company Size to Pay", subtitle = "In Data Science-Related Occupations") +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+
+salaries %>%
+  group_by(company_size) %>%
+  summarize(mean_pay_usd = mean(salary_in_usd),
+            median_pay_usd = median(salary_in_usd),
+            sd_pay_usd = sd(salary_in_usd),
+            max_pay_usd = max(salary_in_usd),
+            min_pay_usd = min(salary_in_usd))
+```
