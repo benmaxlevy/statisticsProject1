@@ -19,7 +19,8 @@ salaries %>%
   geom_boxplot() +
   labs(x = "Company Size", y = "Salary (USD)", title = "Comparing Company Size to Pay", subtitle = "In Data Science-Related Occupations") +
   theme_light() +
-  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
+  scale_y_continuous(labels = scales::dollar)
 
 salaries %>%
   group_by(company_size) %>%
@@ -61,7 +62,8 @@ g+
   labs(x = "Employee Residence Country", y = "Salary (USD)", title = "Comparing Employees' Residence Countries to Pay", subtitle = "In Data Science-Related Occupations") +
   theme_light() +
   theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
-  coord_flip() 
+  coord_flip() +
+  scale_y_continuous(labels = scales::dollar)
 
 filtered_salaries %>%
   group_by(employee_residence) %>%
