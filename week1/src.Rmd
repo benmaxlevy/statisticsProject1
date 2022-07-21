@@ -5,6 +5,7 @@ output: html_notebook
 ```{r, message = FALSE}
 library(ggplot2)
 library(tidyverse)
+
 salaries <- read_csv("dataset/ds_salaries.csv")
 # no scientific notation below 999 digits
 options(scipen = 999) 
@@ -20,6 +21,7 @@ salaries %>%
   theme_light() +
   theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
   scale_y_continuous(labels = scales::dollar)
+
 salaries %>%
   group_by(company_size) %>%
   summarize(mean_pay_usd = mean(salary_in_usd),
@@ -33,6 +35,7 @@ salaries %>%
 # Experience Vs Pay
 
 ```{r}
+
 salaries %>%
   select("experience_level", "salary_in_usd") %>%
     group_by(experience_level) %>%
@@ -51,6 +54,8 @@ geom_col() +
               theme_light() +
                 theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
                   scale_y_continuous(labels = scales::dollar)
+
+
 salaries %>%
   select("experience_level", "salary_in_usd") %>%
     group_by(experience_level) %>%
@@ -62,26 +67,32 @@ salaries %>%
             min_pay_usd = min(salary_in_usd)
             )
 ```
-
 # Country versus Salary
+
 - Only count countries that have >= `n` employees in dataset 
 - Using <https://gist.github.com/radcliff/f09c0f88344a7fcef373> to get full names of countries
 
 ```{r, message = FALSE}
 country_codes <- read_csv("dataset/wikipedia-iso-country-codes.csv")
+
 # rename the whitespaced columns with non-whitespace containing column names
+
 country_codes %>%
   select("English short name lower case", "Alpha-2 code") %>%
   rename(eng = "English short name lower case", code = "Alpha-2 code") -> country_codes
+
 salaries %>%
   group_by(employee_residence) %>%
   tally() %>%
   filter(n >= 5) -> country_counts
+
 salaries %>%
   filter(employee_residence %in% country_counts$employee_residence) -> filtered_salaries
+
 filtered_salaries %>%
   inner_join(country_codes, by = c("employee_residence" = "code")) %>%
   ggplot(aes(x = eng, y = salary_in_usd)) -> g
+
 g+
   geom_boxplot() +
   labs(x = "Employee Residence Country", y = "Salary (USD)", title = "Comparing Employees' Residence Countries to Pay", subtitle = "In Data Science-Related Occupations") +
@@ -89,6 +100,7 @@ g+
   theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
   coord_flip() +
   scale_y_continuous(labels = scales::dollar)
+
 filtered_salaries %>%
   group_by(employee_residence) %>%
   summarize(mean_pay_usd = mean(salary_in_usd),
@@ -114,4 +126,5 @@ ggplot(data = jobTitle, aes(x = fct_reorder(job_title, Average_Salary), y = Aver
   coord_flip() +
   labs(x = "Job Title", y = "Average Salary", title = "Salaries for Job")
 jobTitle
+
 ```
