@@ -3,6 +3,9 @@ title: "R Notebook"
 output: html_notebook
 ---
 ```{r, message = FALSE}
+library(ggplot2)
+library(tidyverse)
+
 salaries <- read_csv("dataset/ds_salaries.csv")
 # no scientific notation below 999 digits
 options(scipen = 999) 
@@ -50,25 +53,15 @@ salaries %>%
   filter(employee_residence %in% country_counts$employee_residence) -> filtered_salaries
 
 filtered_salaries %>%
-  ggplot(aes(x = employee_residence, y = salary_in_usd)) -> g
-
-x_labs <- ggplot_build(g)$layout$panel_params[[1]]$x$get_labels()
-x_labs[!is.na(x_labs)] -> labels
-
-new_labels <- c()
-
-for(label in labels) {
-  eng_name = (country_codes%>%filter(label == code))$eng
-  new_labels <- c(new_labels, eng_name)
-}
+  inner_join(country_codes, by = c("employee_residence" = "code")) %>%
+  ggplot(aes(x = eng, y = salary_in_usd)) -> g
 
 g+
   geom_boxplot() +
   labs(x = "Employee Residence Country", y = "Salary (USD)", title = "Comparing Employees' Residence Countries to Pay", subtitle = "In Data Science-Related Occupations") +
   theme_light() +
   theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
-  coord_flip() +
-  scale_x_discrete(labels = new_labels)
+  coord_flip() 
 
 filtered_salaries %>%
   group_by(employee_residence) %>%
