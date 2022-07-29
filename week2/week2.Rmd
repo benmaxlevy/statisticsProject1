@@ -30,17 +30,18 @@ plastics %>%
 # Company versus Amount of Plastic (2019 & 2020)
 
 ```{r}
+# excluding "Unbranded"
 plastics %>%
   group_by(parent_company) %>%
-  filter(parent_company != "NULL") %>%
-  summarize(mean_pollution = mean(grand_total)) %>%
+  filter(parent_company != "NULL" & parent_company != "Unbranded") %>%
+  summarize(mean_pollution = sum(grand_total)) %>%
   slice_max(mean_pollution, n = 15) -> plastics_companies
 
 plastics_companies %>%
   ggplot(aes(x = fct_reorder(parent_company, mean_pollution), y = mean_pollution)) +
   geom_col() +
   coord_flip() +
-  labs(x = "Number of Plastics", y = "Company", title = "Plastic Pollution by Company", subtitle = "Top 15 Companies by Polution")
+  labs(y = "Number of Plastics", x = "Company", title = "Plastic Pollution by Company", subtitle = "Top 15 Companies by Polution")
 ```
 
 # Country versus Total Plastic
@@ -78,7 +79,7 @@ ggplot(data = data.frame(types, values), aes(x = fct_reorder(types, values), y =
 ```
 
 # Linear Regression (Trivial + Parallel Slopes + Feature-Cross [Interaction Model]) between Year and Volunteers (and other variables)
-```{r, fig.width=20, fig.height=25}
+```{r}
 # model
 
 trivial_year_model <- lm(volunteers ~ year, data = plastics)
@@ -90,7 +91,9 @@ plastics %>%
   ggplot(aes(x = year, y = volunteers)) +
   geom_point() +
   geom_smooth(method = "lm")
+```
 
+```{r, fig.width=20, fig.height=10}
 # model
 
 parallel_year_model <- lm(volunteers ~ year + country, data = plastics)
@@ -117,4 +120,44 @@ plastics %>%
 ```
 
 
-# Linear Regression (...) between `grand_total` and `volunteers` 
+# Linear Regression (...) between `grand_total` and `year` 
+
+```{r}
+# model
+
+trivial_total_model <- lm(grand_total ~ year, data = plastics)
+get_regression_table(trivial_total_model)
+
+# representation
+
+plastics %>%
+  ggplot(aes(x = year, y = grand_total)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r, fig.width=20, fig.height=10}
+# model
+
+parallel_total_model <- lm(grand_total ~ year + country, data = plastics)
+get_regression_table(parallel_total_model)
+
+# representation
+
+plastics %>%
+  ggplot(aes(x = year, y = grand_total, color = country)) +
+  geom_point() +
+  geom_parallel_slopes()
+
+# model
+
+interaction_total_model <- lm(grand_total ~ year + year*country, data = plastics)
+get_regression_table(interaction_total_model)
+
+# representation
+
+plastics %>%
+  ggplot(aes(x = year, y = grand_total, color = country)) +
+  geom_point() +
+  geom_smooth(method = "lm") 
+```
