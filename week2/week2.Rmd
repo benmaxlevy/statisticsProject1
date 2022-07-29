@@ -1,0 +1,120 @@
+---
+title: "week2 project"
+author: "Ben Levy"
+date: "2022-07-28"
+output: html_document
+---
+
+```{r}
+plastics <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv") %>%
+  filter(volunteers != 31318 & parent_company != "null" & parent_company != "Grand Total" & country != "EMPTY")
+
+plastics$parent_company[plastics$parent_company == "Nestlé"] <- "Nestle"
+plastics$parent_company[plastics$parent_company == "Pepsico"] <- "PepsiCo"
+plastics$country[plastics$country == "NIGERIA"] <- "Nigeria"
+plastics$country[plastics$country == "ECUADOR"] <- "Ecuador"
+```
+
+# Year versus Number of Volunteers
+
+```{r}
+plastics %>%
+  ggplot(aes(x = factor(year), y = volunteers)) +
+  geom_boxplot() +
+  labs(x = "Year of Plastic Cleanup", y = "Number of Volunteers", title = "Number of Volunteers versus Year of Plastic Cleanup")
+plastics %>%
+  group_by(year) %>%
+  summarize(median_volunteers = median(volunteers), mean_volunteers = mean(volunteers), sum_volunteers = sum(volunteers))
+```
+
+# Company versus Amount of Plastic (2019 & 2020)
+
+```{r}
+plastics %>%
+  group_by(parent_company) %>%
+  filter(parent_company != "NULL") %>%
+  summarize(mean_pollution = mean(grand_total)) %>%
+  slice_max(mean_pollution, n = 15) -> plastics_companies
+
+plastics_companies %>%
+  ggplot(aes(x = fct_reorder(parent_company, mean_pollution), y = mean_pollution)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "Number of Plastics", y = "Company", title = "Plastic Pollution by Company", subtitle = "Top 15 Companies by Polution")
+```
+
+# Country versus Total Plastic
+
+```{r}
+plastics %>%
+  group_by(country) %>%
+  summarize(sum_pollution = sum(grand_total)) %>%
+  slice_max(sum_pollution, n = 15) -> plastics_countries
+
+plastics_countries %>%
+  ggplot(aes(x = reorder(country, sum_pollution, na.rm = TRUE), y = sum_pollution)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "Country", y = "Total Plastic", title = "Country versus Total Plastic")
+```
+
+# Total Plastic per Type
+
+```{r}
+sum(plastics$hdpe, na.rm = TRUE) -> hdpe
+sum(plastics$ldpe, na.rm = TRUE) -> ldpe
+sum(plastics$o, na.rm = TRUE) -> o
+sum(plastics$pet, na.rm = TRUE) -> pet
+sum(plastics$pp, na.rm = TRUE) -> pp
+sum(plastics$ps, na.rm = TRUE) -> ps
+sum(plastics$pvc, na.rm = TRUE) -> pvc
+
+types <- c("HDPE", "LDPE", "O", "PET", "PP", "PS", "PVC")
+values <- c(hdpe, ldpe, o, pet, pp, ps, pvc)
+
+ggplot(data = data.frame(types, values), aes(x = fct_reorder(types, values), y = values)) +
+  geom_col() +
+  labs(x = "Plastic Type", y = "Frequency", title = "Frequency of Different Types of Plastics")
+```
+
+# Linear Regression (Trivial + Parallel Slopes + Feature-Cross [Interaction Model]) between Year and Volunteers (and other variables)
+```{r, fig.width=20, fig.height=25}
+# model
+
+trivial_year_model <- lm(volunteers ~ year, data = plastics)
+get_regression_table(trivial_year_model) # trivial model - expected negative has been met
+
+# representation
+
+plastics %>%
+  ggplot(aes(x = year, y = volunteers)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+# model
+
+parallel_year_model <- lm(volunteers ~ year + country, data = plastics)
+get_regression_table(parallel_year_model)
+
+# representation
+
+plastics %>%
+  ggplot(aes(x = year, y = volunteers, color = country)) +
+  geom_point() +
+  geom_parallel_slopes()
+
+# model
+
+interaction_year_model <- lm(volunteers ~ year + year*country, data = plastics)
+get_regression_table(interaction_year_model)
+
+# representation
+
+plastics %>%
+  ggplot(aes(x = year, y = volunteers, color = country)) +
+  geom_point() +
+  geom_smooth(method = "lm") 
+```
+
+
+# Linear Regression (...) between `grand_total` and `volunteers` 

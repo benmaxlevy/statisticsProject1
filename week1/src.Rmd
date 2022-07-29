@@ -28,7 +28,8 @@ salaries %>%
             median_pay_usd = median(salary_in_usd),
             sd_pay_usd = sd(salary_in_usd),
             max_pay_usd = max(salary_in_usd),
-            min_pay_usd = min(salary_in_usd))
+            min_pay_usd = min(salary_in_usd)) %>%
+  arrange(desc(mean_pay_usd))
 ```
 
 
@@ -102,12 +103,14 @@ g+
   scale_y_continuous(labels = scales::dollar)
 
 filtered_salaries %>%
-  group_by(employee_residence) %>%
+  inner_join(country_codes, by = c("employee_residence" = "code")) %>%
+  group_by(eng) %>%
   summarize(mean_pay_usd = mean(salary_in_usd),
             median_pay_usd = median(salary_in_usd),
             sd_pay_usd = sd(salary_in_usd),
             max_pay_usd = max(salary_in_usd),
-            min_pay_usd = min(salary_in_usd))
+            min_pay_usd = min(salary_in_usd)) %>%
+  arrange(desc(mean_pay_usd))
 ```
 
 # Job Type vs. Pay
@@ -124,7 +127,7 @@ jobTitle = ds_salaries %>%
 ggplot(data = jobTitle, aes(x = fct_reorder(job_title, Average_Salary), y = Average_Salary)) +
   geom_col() +
   coord_flip() +
-  labs(x = "Job Title", y = "Average Salary", title = "Salaries for Job")
+  labs(x = "Job Title", y = "Average Salary", title = "Job Title's Affect on Salary")
 jobTitle
 
 ```
