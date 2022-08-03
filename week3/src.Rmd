@@ -1,0 +1,131 @@
+---
+title: "week3"
+author: "Ben Levy"
+date: "2022-08-03"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(janitor)
+library(infer)
+violence <- read_csv("./GunViolenceArchiveDataJan2014toJun2022.csv")
+state_populations <- read_csv("./historical_state_population_by_year.csv")
+```
+
+```{r}
+options(scipen = 999)
+
+violence %>%
+    arrange(desc(n_killed)) %>%
+    clean_names() %>%
+    mutate(year = year(incident_date)) %>%
+    filter(n_killed > 0 & n_injured > 0 & year != 2022) %>%
+    select(state, n_killed, n_injured, year) -> violence
+
+state_populations$state[state_populations$state == "AL"] <- "Alabama"
+state_populations$state[state_populations$state == "AK"] <- "Alaska"
+state_populations$state[state_populations$state == "AZ"] <- "Arizona"
+state_populations$state[state_populations$state == "AR"] <- "Arkansas"
+state_populations$state[state_populations$state == "CA"] <- "California"
+state_populations$state[state_populations$state == "CO"] <- "Colorado"
+state_populations$state[state_populations$state == "CT"] <- "Connecticut"
+state_populations$state[state_populations$state == "DE"] <- "Delaware"
+state_populations$state[state_populations$state == "DC"] <- "District of Columbia"
+state_populations$state[state_populations$state == "FL"] <- "Florida"
+state_populations$state[state_populations$state == "GA"] <- "Georgia"
+state_populations$state[state_populations$state == "GU"] <- "Guam"
+state_populations$state[state_populations$state == "HI"] <- "Hawaii"
+state_populations$state[state_populations$state == "ID"] <- "Idaho"
+state_populations$state[state_populations$state == "IL"] <- "Illinois"
+state_populations$state[state_populations$state == "IN"] <- "Indiana"
+state_populations$state[state_populations$state == "IA"] <- "Iowa"
+state_populations$state[state_populations$state == "KS"] <- "Kansas"
+state_populations$state[state_populations$state == "KY"] <- "Kentucky"
+state_populations$state[state_populations$state == "LA"] <- "Louisiana"
+state_populations$state[state_populations$state == "ME"] <- "Maine"
+state_populations$state[state_populations$state == "MD"] <- "Maryland"
+state_populations$state[state_populations$state == "MA"] <- "Massachusetts"
+state_populations$state[state_populations$state == "MI"] <- "Michigan"
+state_populations$state[state_populations$state == "MN"] <- "Minnesota"
+state_populations$state[state_populations$state == "MS"] <- "Mississippi"
+state_populations$state[state_populations$state == "MT"] <- "Montana"
+state_populations$state[state_populations$state == "NE"] <- "Nebraska"
+state_populations$state[state_populations$state == "NV"] <- "Nevada"
+state_populations$state[state_populations$state == "NH"] <- "New Hampshire"
+state_populations$state[state_populations$state == "NJ"] <- "New Jersey"
+state_populations$state[state_populations$state == "NM"] <- "New Mexico"
+state_populations$state[state_populations$state == "NY"] <- "New York"
+state_populations$state[state_populations$state == "NC"] <- "North Carolina"
+state_populations$state[state_populations$state == "ND"] <- "North Dakota"
+state_populations$state[state_populations$state == "OH"] <- "Ohio"
+state_populations$state[state_populations$state == "OK"] <- "Oklahoma"
+state_populations$state[state_populations$state == "OR"] <- "Oregon"
+state_populations$state[state_populations$state == "PA"] <- "Pennsylvania"
+state_populations$state[state_populations$state == "PR"] <- "Puerto Rico"
+state_populations$state[state_populations$state == "RI"] <- "Rhode Island"
+state_populations$state[state_populations$state == "SC"] <- "South Carolina"
+state_populations$state[state_populations$state == "TN"] <- "Tennessee"
+state_populations$state[state_populations$state == "TX"] <- "Texas"
+state_populations$state[state_populations$state == "UT"] <- "Utah"
+state_populations$state[state_populations$state == "VT"] <- "Vermont"
+state_populations$state[state_populations$state == "VA"] <- "Virginia"
+state_populations$state[state_populations$state == "WV"] <- "West Virginia"
+state_populations$state[state_populations$state == "WI"] <- "Wisconsin"
+state_populations$state[state_populations$state == "WY"] <- "Wyoming"
+
+violence <- inner_join(violence, state_populations, by = c("state", "year"))
+```
+
+# Comparing Year to Gun Violence
+
+## Year to `n_injured`
+
+```{r}
+violence %>%
+    group_by(year) %>%
+    summarize(sum_injured = sum(n_injured)) %>%
+    ggplot(aes(x = factor(year), y = sum_injured)) +
+    geom_col(color = "white") +
+    labs(title = "Comparing Year to the Number of Persons Injured in Shootings", x = "Year", y = "Number of Persons Injured")
+```
+
+## Year to `n_killed`
+
+```{r}
+violence %>%
+    group_by(year) %>%
+    summarize(sum_killed = sum(n_killed)) %>%
+    ggplot(aes(x = factor(year), y = sum_killed)) +
+    geom_col(color = "white") +
+    labs(title = "Comparing Year to the Number of Persons Killed in Shootings", x = "Year", y = "Number of Persons Killed")
+```
+
+# Comparing State to Gun Violence (top 10 states)
+
+## `state` to `n_injured`
+
+```{r}
+violence %>%
+    group_by(state) %>%
+    summarize(sum_injured = sum(n_injured/population)*100000) %>%
+    slice_max(sum_injured, n = 15) %>%
+    ggplot(aes(x = fct_reorder(state, sum_injured), y = sum_injured)) +
+    geom_col(color = "white") +
+    coord_flip() +
+    labs(title = "Comparing State to the Per 100,000 People Injured in Shootings", subtitle = "Top 15 States from 2014-2019", x = "State", y = "Number of Persons per 100,000 Injured")
+```
+
+## `state` to `n_killed`
+
+```{r}
+violence %>%
+    group_by(state) %>%
+    summarize(sum_killed = sum(n_killed/population)*100000) %>%
+    slice_max(sum_killed, n = 15) %>%
+    ggplot(aes(x = fct_reorder(state, sum_killed), y = sum_killed)) +
+    geom_col(color = "white") +
+    coord_flip() +
+    labs(title = "Comparing State to the Per 100,000 People Killed in Shootings", subtitle = "Top 15 States from 2014-2019", x = "State", y = "Number of Persons per 100,000 Killed")
+```
