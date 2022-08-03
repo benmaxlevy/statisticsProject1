@@ -22,7 +22,9 @@ violence %>%
     clean_names() %>%
     mutate(year = year(incident_date)) %>%
     filter(n_killed > 0 & n_injured > 0 & year != 2022) %>%
-    select(state, n_killed, n_injured, year) -> violence
+    select(state, n_killed, n_injured, year) %>%
+    group_by(state, year) %>%
+    summarize(n_killed = sum(n_killed), n_injured = sum(n_injured)) -> violence
 
 state_populations$state[state_populations$state == "AL"] <- "Alabama"
 state_populations$state[state_populations$state == "AK"] <- "Alaska"
@@ -78,6 +80,15 @@ state_populations$state[state_populations$state == "WY"] <- "Wyoming"
 violence <- inner_join(violence, state_populations, by = c("state", "year"))
 ```
 
+```{r}
+violence %>%
+    mutate(killed_capita = n_killed/population,
+           injured_capita = n_injured/population,
+           hundred_thousand_injured = injured_capita*100000,
+           hundred_thousand_killed = killed_capita*100000) -> violence
+```
+
+
 # Comparing Year to Gun Violence
 
 ## Year to `n_injured`
@@ -109,7 +120,7 @@ violence %>%
 ```{r}
 violence %>%
     group_by(state) %>%
-    summarize(sum_injured = sum(n_injured/population)*100000) %>%
+    summarize(sum_injured = sum(hundred_thousand_injured)) %>%
     slice_max(sum_injured, n = 15) %>%
     ggplot(aes(x = fct_reorder(state, sum_injured), y = sum_injured)) +
     geom_col(color = "white") +
@@ -122,7 +133,7 @@ violence %>%
 ```{r}
 violence %>%
     group_by(state) %>%
-    summarize(sum_killed = sum(n_killed/population)*100000) %>%
+    summarize(sum_killed = sum(hundred_thousand_killed)) %>%
     slice_max(sum_killed, n = 15) %>%
     ggplot(aes(x = fct_reorder(state, sum_killed), y = sum_killed)) +
     geom_col(color = "white") +
