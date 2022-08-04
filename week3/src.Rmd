@@ -7,11 +7,13 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(moderndive)
 library(lubridate)
 library(janitor)
 library(infer)
 violence <- read_csv("./GunViolenceArchiveDataJan2014toJun2022.csv")
 state_populations <- read_csv("./historical_state_population_by_year.csv")
+gun_sales <- readxl::read_excel("./BW3-1986-2019_gunSales.xlsx")
 ```
 
 ```{r}
@@ -139,4 +141,17 @@ violence %>%
     geom_col(color = "white") +
     coord_flip() +
     labs(title = "Comparing State to the Per 100,000 People Killed in Shootings", subtitle = "Top 15 States from 2014-2019", x = "State", y = "Number of Persons per 100,000 Killed")
+```
+
+# Scatterplot + Linear Regression of Time (Year) versus Total Gun Sales
+
+## Scatterplot with Trivial Model
+
+```{r}
+gun_sales %>%
+    ggplot(aes(x = Year, y = Total)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(y = "Total Firearm Sales", title = "Comparing Year to Firearm Sales", subtitle = "In the US, 1986-2019: Trivial Model")
+get_correlation(Total ~ Year, data = gun_sales)
 ```
